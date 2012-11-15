@@ -12,7 +12,7 @@
 			<version>2.5.0</version>
 		</dependency>
 	</dependencies>
-	
+
 	<repositories>
 		<repository>
 			<id>mod4j</id>
@@ -21,4 +21,16 @@
 		</repository>
 	</repositories>
 
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

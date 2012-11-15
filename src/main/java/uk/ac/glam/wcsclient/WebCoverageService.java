@@ -34,7 +34,7 @@ public abstract class WebCoverageService {
 		
 		LOGGER.info("Version: " + version);
 		
-		if (version.equals("1.0.0")) {
+		if (version == null || version.equals("1.0.0")) {
 			return new WCS100(url);
 		} else if (version.equals("1.1.1")) {
 			return new WCS111(url);
