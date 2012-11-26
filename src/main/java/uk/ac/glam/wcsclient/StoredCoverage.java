@@ -1,6 +1,6 @@
 package uk.ac.glam.wcsclient;
 
-import uk.ac.glam.wcsclient.ows110.ReferenceGroupType;
+import net.opengis.ows11.ReferenceGroupType;
 
 public class StoredCoverage {
 
@@ -11,6 +11,8 @@ public class StoredCoverage {
 	}
 	
 	public String getCoverageHref() {
-		return coverageRef.getAbstractReferenceBase().get(0).getHref();
+            // TODO: do the necessary cast
+		//return coverageRef.getAbstractReferenceBase().get(0).getHref();
+                return null;
 	}
 }

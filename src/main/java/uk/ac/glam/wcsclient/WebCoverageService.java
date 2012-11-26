@@ -2,6 +2,8 @@ package uk.ac.glam.wcsclient;
 
 import java.io.IOException;
 import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 public abstract class WebCoverageService {
 	protected String serviceURL;
@@ -15,7 +17,7 @@ public abstract class WebCoverageService {
 		return serviceURL;
 	}
 
-	public static WebCoverageService createWebCoverageService(String url) throws IOException {
+	public static WebCoverageService createWebCoverageService(String url) throws IOException, SAXException, ParserConfigurationException {
 		String version = null;
 		
 		LOGGER.info("Creating WCS with url: " + url);

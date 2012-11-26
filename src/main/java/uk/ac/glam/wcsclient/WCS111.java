@@ -1,81 +1,79 @@
 package uk.ac.glam.wcsclient;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
-
-import org.eclipse.emf.ecore.resource.Resource;
-
-import uk.ac.glam.wcsclient.ows110.ReferenceGroupType;
-import uk.ac.glam.wcsclient.wcs111.CapabilitiesType;
-import uk.ac.glam.wcsclient.wcs111.CoverageDescriptionType;
-import uk.ac.glam.wcsclient.wcs111.CoverageSummaryType;
-import uk.ac.glam.wcsclient.wcs111.DocumentRoot;
-import uk.ac.glam.wcsclient.wcs111.util.Wcs111XMLProcessor;
+import javax.xml.parsers.ParserConfigurationException;
+import net.opengis.ows11.ReferenceGroupType;
+import net.opengis.wcs11.CapabilitiesType;
+import net.opengis.wcs11.CoverageDescriptionType;
+import net.opengis.wcs11.CoverageSummaryType;
+import net.opengis.wcs11.CoveragesType;
+import org.geotools.wcs111.WCSConfiguration;
+import org.geotools.xml.Configuration;
+import org.geotools.xml.Parser;
+import org.xml.sax.SAXException;
 
 public class WCS111 extends WebCoverageService {
 
-	private CapabilitiesType capabilitiesType;
-	private Wcs111XMLProcessor processor = new Wcs111XMLProcessor();
-	private static final Logger LOGGER = Logger.getLogger("wcsclient");
+    private CapabilitiesType capabilitiesType;
+    private static final Logger LOGGER = Logger.getLogger("wcsclient");
+    private final Configuration configuration = new WCSConfiguration();
 
-	public WCS111(String url) throws IOException {
-		super(url);
-		Resource r = processor.load(url, null);
-		DocumentRoot root = (DocumentRoot)r.getContents().get(0);
-		capabilitiesType = root.getCapabilities();
-	}
+    public WCS111(String urlString) throws IOException, SAXException, ParserConfigurationException {
+        super(urlString);
+        
 
-	public CapabilitiesType getCapabilities() {
-		return capabilitiesType;
-	}
-	
-	public CoverageDescriptionType describeCoverage(String identifier) throws IOException {
-		
-		String url = getServiceURL() + "?REQUEST=DescribeCoverage";
-		// only use 1.1.1 for now
-		url += "&VERSION=1.1.1";
-		url += "&IDENTIFIERS=" + identifier;
-		url += "&SERVICE=wcs";
-		
-		Resource r = processor.load(url, null);
-		DocumentRoot root = (DocumentRoot) r.getContents().get(0);
-		//We've only requested one coverage description
-		return root.getCoverageDescriptions().getCoverageDescription().get(0);
-	}
-	
-	public StoredCoverage getCoverageAndStore(String identifier, String bbox, String format) throws IOException {
-		String url = getServiceURL() + "?SERVICE=WCS&REQUEST=GetCoverage&VERSION=1.1.1";
-		url += "&IDENTIFIER=" + identifier;
-		url += "&BOUNDINGBOX=" + bbox;
-		url += "&FORMAT=" + format;
-		url += "&STORE=true";
-		
-		LOGGER.info("Making GetCoverage request to: " + url);
-		
-		Resource r = processor.load(url, null);
-		
-		Object root = r.getContents().get(0);
-		if (root instanceof DocumentRoot) {
-			ReferenceGroupType coverage = ((DocumentRoot)root).getCoverages().getCoverage().get(0);
-			return new StoredCoverage(coverage);
-		} else if (root instanceof uk.ac.glam.wcsclient.ows110.DocumentRoot) {
-			// Probably an exception
-			// TODO: make suitable exception
-		}
-		return null;
-	}
-	
-	public CoverageSummaryType getCoverageSummary(String identifier) {
-		List<CoverageSummaryType> covSummaries = capabilitiesType.getContents().getCoverageSummary();
-		for (Iterator<CoverageSummaryType> iterator = covSummaries.iterator(); iterator.hasNext();) {
-			CoverageSummaryType coverageSummaryType = iterator
-					.next();
-			if (coverageSummaryType.getIdentifier().equals(identifier))
-				return coverageSummaryType;
-		}
-		return null;
-	}
+        URL url = new URL(urlString);
+        Parser parser = new Parser(configuration);
+        capabilitiesType = (CapabilitiesType) parser.parse(url.openStream());
 
+    }
+
+    public CapabilitiesType getCapabilities() {
+        return capabilitiesType;
+    }
+
+    public CoverageDescriptionType describeCoverage(String identifier) throws IOException, SAXException, ParserConfigurationException {
+
+        String urlString = getServiceURL() + "?REQUEST=DescribeCoverage";
+        // only use 1.1.1 for now
+        urlString += "&VERSION=1.1.1";
+        urlString += "&IDENTIFIERS=" + identifier;
+        urlString += "&SERVICE=wcs";
+        
+        URL url = new URL(urlString);
+        Parser parser = new Parser(configuration);
+        return (CoverageDescriptionType) parser.parse(url.openStream());
+    }
+
+    public StoredCoverage getCoverageAndStore(String identifier, String bbox, String format) throws IOException, SAXException, ParserConfigurationException {
+        String urlString = getServiceURL() + "?SERVICE=WCS&REQUEST=GetCoverage&VERSION=1.1.1";
+        urlString += "&IDENTIFIER=" + identifier;
+        urlString += "&BOUNDINGBOX=" + bbox;
+        urlString += "&FORMAT=" + format;
+        urlString += "&STORE=true";
+
+        LOGGER.info("Making GetCoverage request to: " + urlString);
+        
+        URL url = new URL(urlString);
+        Parser parser = new Parser(configuration);
+        CoveragesType coverages =  (CoveragesType) parser.parse(url.openStream());
+        
+        return new StoredCoverage((ReferenceGroupType)coverages.getCoverage().get(0));
+    }
+
+    public CoverageSummaryType getCoverageSummary(String identifier) {
+        List<CoverageSummaryType> covSummaries = capabilitiesType.getContents().getCoverageSummary();
+        for (Iterator<CoverageSummaryType> iterator = covSummaries.iterator(); iterator.hasNext();) {
+            CoverageSummaryType coverageSummaryType = iterator
+                    .next();
+            if (coverageSummaryType.getIdentifier().equals(identifier)) {
+                return coverageSummaryType;
+            }
+        }
+        return null;
+    }
 }
